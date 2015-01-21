@@ -50,12 +50,12 @@
 
 
 (defun random-letter ()
-  (code-char (+ (char-code #\A) (random (1+ (- (char-code #\Z) (char-code #\A)))))))
+  (code-char (+ (char-code #\a) (random (1+ (- (char-code #\z) (char-code #a)))))))
 (let ((letter-cumul-freqs '(817 966 1244 1669 2940 3162 3364 3973 4670 4685 4762 5165 5406 6080 6831 7024
 			    7034 7632 8265 9171 9446 9544 9780 9795 9993 10000)))
   (defun random-english-letter ()
     (let ((r (random 10000)))
-      (code-char (+ (char-code #\A) (position-if #'(lambda (n) (< r n)) letter-cumul-freqs))))))
+      (code-char (+ (char-code #\a) (position-if #'(lambda (n) (< r n)) letter-cumul-freqs))))))
 
 (defun fill-board-randomly (boggle-board)
   (do-on-letters row column
@@ -149,8 +149,36 @@
     (when (and range-start range-end)
      (word-list words (list range-start range-end)))))
 
-(defun extend-solution (boggle-board current-words current-path current-letter-index current-word-range)
-  (iter (for path-extensions in (possible-extensions (car current-path)))))
+(defun position-equal (pos1 pos2)
+  (with-position (r1 c1 pos1)
+    (with-position (r2 c2 pos2)
+      (and (= r1 r2) (= c1 c2)))))
+(defun path-has-position (path position)
+  (and (not (null path))
+       (or (position-equal (car path) position)
+	   (path-has-position (cdr path) position))))
+
+(defun format-path (path)
+  (format nil "~{~a~^, ~}"
+	  (iter (for position in (cdr (reverse path)))
+		(collect (with-position (r c position)
+			   (format nil "[~a, ~a]" r c))))))
+(defun empty-range-p (range)
+  (and (null (car range))
+       (null (cadr range))))
+
+(defun compute-solutions (boggle-board words
+			  current-words current-word current-path)
+  (iter (for path-extension in (possible-extensions (car current-path)))
+	(when (not (path-has-position current-path path-extension))
+	  (let* ((new-path (cons path-extension current-path))
+		 (new-word (format nil "~a~a" current-word (letter boggle-board path-extension)))
+		 (word-range (possible-word-range words new-word)))
+	    (unless (empty-range-p word-range)
+	      (when (>= (length new-word) 3)
+		(when (string= new-word (dict-word words (car word-range)))
+		  (format t "~a, ~a~%" new-word (format-path new-path))))
+	      (compute-solutions boggle-board words current-words new-word new-path))))))
 
 
 
