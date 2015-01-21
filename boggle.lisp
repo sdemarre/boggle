@@ -50,7 +50,7 @@
 
 
 (defun random-letter ()
-  (code-char (+ (char-code #\a) (random (1+ (- (char-code #\z) (char-code #a)))))))
+  (code-char (+ (char-code #\a) (random (1+ (- (char-code #\z) (char-code #\a)))))))
 (let ((letter-cumul-freqs '(817 966 1244 1669 2940 3162 3364 3973 4670 4685 4762 5165 5406 6080 6831 7024
 			    7034 7632 8265 9171 9446 9544 9780 9795 9993 10000)))
   (defun random-english-letter ()
