@@ -61,6 +61,11 @@
     (setf (letter boggle-board (make-position row column)) (random-english-letter)))
   boggle-board)
 
+(defun fill-board (boggle-board letters)
+  (do-on-letters row column
+    (setf (letter boggle-board (make-position row column)) (elt letters (+ column (* row +board-num-columns+)))))
+  boggle-board)
+
 (defmacro with-position ((row column position) &body body)
   `(let ((,row (position-row ,position))
 	 (,column (position-column ,position)))
