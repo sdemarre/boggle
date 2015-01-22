@@ -108,47 +108,6 @@
   (and (word-has-enough-letters-p word letter-index)
        (char= (elt word letter-index) letter)))
 
-(defparameter *1-letter-ranges* nil)
-(defun first-word-with-letter (words letter)
-  (position-if #'(lambda (word) (char= letter (elt word 0))) words))
-(defun last-word-with-letter (words first-word letter)
-  (when first-word
-    (let ((p (position-if-not #'(lambda (word) (char= letter (elt word 0))) words :start first-word)))
-      (if p (1- p)
-	  (1- (length words))))))
-(defun 1-letter-ranges (words)
-  (let ((result (make-array 26)))
-    (iter (for letter from (char-code #\a) to (char-code #\z))
-          (for index from 0)
-          (let ((first-word (first-word-with-letter words (code-char letter))))
-	    (setf (elt result index)
-		  (list first-word (last-word-with-letter words first-word (code-char letter))))))
-    result))
-(defmacro with-1-letter-ranges (words &body body)
-  `(let ((*1-letter-ranges* (1-letter-ranges ,words)))
-     ,@body))
-(defun possible-letter-range (words current-range-low current-range-high letter-index letter)
-  (if (and (zerop letter-index) (not (null *1-letter-ranges*)))
-      (elt *1-letter-ranges* (- (char-code letter) (char-code #\a)))
-      (cond ((or (and (dict-word-has-enough-letters-p words current-range-low letter-index)
-                      (char< letter (dict-word-letter words current-range-low letter-index)))
-                 (and (dict-word-has-enough-letters-p words current-range-high letter-index)
-                      (char> letter (dict-word-letter words current-range-high letter-index))))
-             (list nil nil))
-            (t
-             (let* ((new-range-low
-                     (position-if #'(lambda (word) (word-with-letter-p word letter-index letter))
-                                  words
-                                  :start current-range-low :end (1+ current-range-high)))
-                    (new-range-high
-                     (when new-range-low
-                       (position-if #'(lambda (word) (word-with-letter-p word letter-index letter))
-                                    words
-                                    :start new-range-low :end (1+ current-range-high) :from-end t))))
-               (list new-range-low (if new-range-low (if new-range-high
-                                                         new-range-high
-                                                         current-range-high)
-                                       nil)))))))
 (defun binary-search (sequence compare range-low range-high)
   (let* ((first range-low)
 	 (last range-high)
@@ -240,11 +199,10 @@
 	      (compute-solutions boggle-board words current-words new-word new-path collect-solution))))))
 
 (defun list-possible-solutions (boggle-board words)
-  (with-1-letter-ranges words
-    (let (result)
-      (compute-solutions boggle-board words nil "" (list (make-position -1 -1))
-			 #'(lambda (new-word new-path) (push (list new-word (rest (reverse new-path))) result)))
-      (reverse (remove-duplicates result :test #'string= :key #'car)))))
+  (let (result)
+    (compute-solutions boggle-board words nil "" (list (make-position -1 -1))
+		       #'(lambda (new-word new-path) (push (list new-word (rest (reverse new-path))) result)))
+    (reverse (remove-duplicates result :test #'string= :key #'car))))
 
 (defun list-equal (l1 l2)
   (if (and (not (null l1))
@@ -272,15 +230,14 @@
 		 "rsseah" "rt" "scnrehe" "sg" "stboefl" "swocaee" "tay" "tgeah" "tiooa"
 		 "trevud" "ttsre" "tuinpp" "wai" "wktrsra" "wleen" "wnaoa" "wnimds" "wol"
 		 "wost" "wtenuev" "yoor" "ytrehee")))
-    (with-1-letter-ranges words
-      (verify (list-equal (possible-word-range words "a") '(0 6)))
-      (verify (list-equal (possible-word-range words "ab") '(nil nil)))
-      (verify (list-equal (possible-word-range words "sg") '(78 78)))
-      (verify (list-equal (possible-word-range words "wo") '(92 93)))
-      (verify (list-equal (possible-word-range words "de") '(nil nil)))
-      (verify (list-equal (possible-word-range words "o") '(56 62)))
-      (verify (list-equal (possible-word-range words "oa") '(56 57)))
-      (verify (list-equal (possible-word-range words "f") '(nil nil)))
-      (verify (list-equal (possible-word-range words "oaa") '(56 56)))
-      (verify (list-equal (possible-word-range words "oaf") '(57 57)))
-      (verify (list-equal (possible-word-range words "z") '(nil nil))))))
+    (verify (list-equal (possible-word-range words "a") '(0 6)))
+    (verify (list-equal (possible-word-range words "ab") '(nil nil)))
+    (verify (list-equal (possible-word-range words "sg") '(78 78)))
+    (verify (list-equal (possible-word-range words "wo") '(92 93)))
+    (verify (list-equal (possible-word-range words "de") '(nil nil)))
+    (verify (list-equal (possible-word-range words "o") '(56 62)))
+    (verify (list-equal (possible-word-range words "oa") '(56 57)))
+    (verify (list-equal (possible-word-range words "f") '(nil nil)))
+    (verify (list-equal (possible-word-range words "oaa") '(56 56)))
+    (verify (list-equal (possible-word-range words "oaf") '(57 57)))
+    (verify (list-equal (possible-word-range words "z") '(nil nil)))))
