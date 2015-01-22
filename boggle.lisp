@@ -64,7 +64,7 @@
 
 (defmacro with-position ((row column position) &body body)
   `(let ((,row (position-row ,position))
-	 (,column (position-column ,position)))     
+	 (,column (position-column ,position)))
      ,@body))
 
 (defun valid-board-position (position)
@@ -87,7 +87,10 @@
 
 
 (defun read-english-words ()
-  (let ((filename "c:/users/serge.demarre/appdata/roaming/src/lisp/systems/boggle/wordsEn.txt"))
+  (let (
+#+win32(filename "c:/users/serge.demarre/appdata/roaming/src/lisp/systems/boggle/wordsEn.txt")
+       #+unix(filename "/home/serge/src/lisp/my-systems/boggle/wordsEn.txt")
+       )
    (coerce (iter (for line in-file filename using #'read-line)
 		 (collect (subseq line 0 (1- (length line)))))
 	   'vector)))
@@ -111,7 +114,7 @@
 	     (and (dict-word-has-enough-letters-p words current-range-high letter-index)
 		  (char> letter (dict-word-letter words current-range-high letter-index))))
 	 (list nil nil))
-	(t	     
+	(t
 	 (let* ((new-range-low
 		 (position-if #'(lambda (word) (word-with-letter-p word letter-index letter))
 			      words
@@ -168,7 +171,7 @@
        (null (cadr range))))
 
 (defun compute-solutions (boggle-board words
-			  current-words current-word current-path)
+			  current-words current-word current-path &optional collect-solution)
   (iter (for path-extension in (possible-extensions (car current-path)))
 	(when (not (path-has-position current-path path-extension))
 	  (let* ((new-path (cons path-extension current-path))
@@ -177,8 +180,9 @@
 	    (unless (empty-range-p word-range)
 	      (when (>= (length new-word) 3)
 		(when (string= new-word (dict-word words (car word-range)))
-		  (format t "~a, ~a~%" new-word (format-path new-path))))
-	      (compute-solutions boggle-board words current-words new-word new-path))))))
+                  (if collect-solution (funcall collect-solution new-word new-path)
+                      (format t "~a, ~a~%" new-word (format-path new-path)))))
+	      (compute-solutions boggle-board words current-words new-word new-path collect-solution))))))
 
 
 
