@@ -205,6 +205,13 @@
                       (format t "~a, ~a~%" new-word (format-path new-path)))))
 	      (compute-solutions boggle-board words current-words new-word new-path collect-solution))))))
 
+(defun list-possible-solutions (boggle-board words)
+  (with-1-letter-ranges words
+    (let (result)
+      (compute-solutions boggle-board words nil "" (list (make-position -1 -1))
+			 #'(lambda (new-word new-path) (push (list new-word (rest (reverse new-path))) result)))
+      (reverse result))))
+
 (defun list-equal (l1 l2)
   (if (and (not (null l1))
 	   (not (null l2)))
