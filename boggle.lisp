@@ -108,26 +108,38 @@
 (defun word-with-letter-p (word letter-index letter)
   (and (word-has-enough-letters-p word letter-index)
        (char= (elt word letter-index) letter)))
+(defparameter *1-letter-ranges* nil)
+(defun init-1-letter-ranges (words current-range-low current-range-high)
+  (let ((result (make-array 26)))
+    (iter (for letter from (char-code #\a) to (char-code #\z))
+          (for index from 0)
+          (setf (elt result index) (possible-letter-range words current-range-low current-range-high 1 (code-char letter))))
+    result))
 (defun possible-letter-range (words current-range-low current-range-high letter-index letter)
-  (cond ((or (and (dict-word-has-enough-letters-p words current-range-low letter-index)
-		  (char< letter (dict-word-letter words current-range-low letter-index)))
-	     (and (dict-word-has-enough-letters-p words current-range-high letter-index)
-		  (char> letter (dict-word-letter words current-range-high letter-index))))
-	 (list nil nil))
-	(t
-	 (let* ((new-range-low
-		 (position-if #'(lambda (word) (word-with-letter-p word letter-index letter))
-			      words
-			      :start current-range-low :end (1+ current-range-high)))
-		(new-range-high
-		 (when new-range-low
-		   (position-if #'(lambda (word) (word-with-letter-p word letter-index letter))
-				    words
-				    :start new-range-low :end (1+ current-range-high) :from-end t))))
-	   (list new-range-low (if new-range-low (if new-range-high
-						     new-range-high
-						     current-range-high)
-				   nil))))))
+  (if (zerop letter-index)
+      (progn
+        (when (null *1-letter-ranges*)
+          (init-1-letter-ranges words current-range-low current-range-high))
+        (elt *1-letter-ranges* (- (char-code letter) (char-code #\a))))
+      (cond ((or (and (dict-word-has-enough-letters-p words current-range-low letter-index)
+                      (char< letter (dict-word-letter words current-range-low letter-index)))
+                 (and (dict-word-has-enough-letters-p words current-range-high letter-index)
+                      (char> letter (dict-word-letter words current-range-high letter-index))))
+             (list nil nil))
+            (t
+             (let* ((new-range-low
+                     (position-if #'(lambda (word) (word-with-letter-p word letter-index letter))
+                                  words
+                                  :start current-range-low :end (1+ current-range-high)))
+                    (new-range-high
+                     (when new-range-low
+                       (position-if #'(lambda (word) (word-with-letter-p word letter-index letter))
+                                    words
+                                    :start new-range-low :end (1+ current-range-high) :from-end t))))
+               (list new-range-low (if new-range-low (if new-range-high
+                                                         new-range-high
+                                                         current-range-high)
+                                       nil)))))))
 (defun possible-word-range (words word)
   (let ((current-range-low 0)
 	(current-range-high (1- (length words))))
