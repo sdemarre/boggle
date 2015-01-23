@@ -96,7 +96,16 @@
        #+unix(filename "/home/serge/src/lisp/my-systems/boggle/wordsEn.txt")
        )
    (coerce (iter (for line in-file filename using #'read-line)
-		 (collect (subseq line 0 (1- (length line)))))
+		 (collect line))
+	   'vector)))
+
+(defun read-dutch-words ()
+  (let (
+#+win32(filename "c:/users/serge.demarre/appdata/roaming/src/lisp/systems/boggle/wordsDu.txt")
+       #+unix(filename "/home/serge/src/lisp/my-systems/boggle/wordsDu.txt")
+       )
+   (coerce (iter (for line in-file filename using #'read-line)
+		 (collect line))
 	   'vector)))
 (defun dict-word (words word-index)
   (elt words word-index))
