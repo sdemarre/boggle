@@ -255,3 +255,10 @@
     (verify (list-equal (possible-word-range words "oaa") '(56 56)))
     (verify (list-equal (possible-word-range words "oaf") '(57 57)))
     (verify (list-equal (possible-word-range words "z") '(nil nil)))))
+
+(defun find-best-board (words &optional (number-tries 10000))
+  (iter (for i from 1 to number-tries)
+	(let ((board (fill-board-randomly (make-instance 'boggle-board))))
+	  (let ((solutions (list-possible-solutions board words)))
+	    (finding (list board (length solutions) solutions) maximizing (length solutions))))))
+; nice board "fhbnsneretolhoek"
