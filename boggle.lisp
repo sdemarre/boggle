@@ -261,4 +261,4 @@
 	(let ((board (fill-board-randomly (make-instance 'boggle-board))))
 	  (let ((solutions (list-possible-solutions board words)))
 	    (finding (list board (length solutions) solutions) maximizing (length solutions))))))
-; nice board "fhbnsneretolhoek"
+; nice board "fhbnsneretolhoek" "ridaselsotogthrn"
