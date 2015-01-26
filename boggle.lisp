@@ -2,7 +2,6 @@
 
 (in-package #:boggle)
 
-;;; "boggle" goes here. Hacks and glory await!
 (defconstant +board-num-rows+ 4)
 (defconstant +board-num-columns+ 4)
 
@@ -23,18 +22,6 @@
 (defsetf letter (boggle-board position) (new-letter)
   `(setf (aref (letters ,boggle-board) (position-row ,position) (position-column ,position)) ,new-letter))
 
-(defmacro do-on-letters (row-var column-var &body body)
-  `(do-on-rows ,row-var
-     (do-on-columns ,column-var
-       ,@body)))
-
-(defmacro do-on-rows (row-var &body body)
-  `(iter (for ,row-var from 0 to (1- +board-num-rows+))
-	 ,@body))
-
-(defmacro do-on-columns (column-var &body body)
-  `(iter (for ,column-var from 0 to (1- +board-num-columns+))
-	 ,@body))
 
 (defmethod print-object (boggle-board stream)
   (print-unreadable-object (boggle-board stream)
@@ -57,14 +44,22 @@
       (code-char (+ (char-code #\a) (position-if #'(lambda (n) (< r n)) letter-cumul-freqs))))))
 
 (defun fill-board-randomly (boggle-board)
-  (do-on-letters row column
-    (setf (letter boggle-board (make-position row column)) (random-english-letter)))
+  (do-on-positions position
+    (setf (letter boggle-board position) (random-english-letter)))
   boggle-board)
 
 (defun fill-board (boggle-board letters)
-  (do-on-letters row column
-    (setf (letter boggle-board (make-position row column)) (elt letters (+ column (* row +board-num-columns+)))))
+  (let ((index -1))
+    (do-on-positions position
+      (setf (letter boggle-board position) (elt letters (incf index)))))
   boggle-board)
+
+(defun board-letter-string (boggle-board)
+  (coerce
+   (iter outer (for r from 0 to (1- +board-num-rows+))
+	 (iter (for c from 0 to (1- +board-num-columns+))
+	       (in outer (collect (letter boggle-board (make-position r c))))))
+   'string))
 
 (defmacro with-position ((row column position) &body body)
   `(let ((,row (position-row ,position))
@@ -261,4 +256,4 @@
 	(let ((board (fill-board-randomly (make-instance 'boggle-board))))
 	  (let ((solutions (list-possible-solutions board words)))
 	    (finding (list board (length solutions) solutions) maximizing (length solutions))))))
-; nice board "fhbnsneretolhoek" "ridaselsotogthrn"
+; nice board "fhbnsneretolhoek" "ridaselsotogthrn" "wesnnteleruisdoh"
