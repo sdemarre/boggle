@@ -54,6 +54,9 @@
       (setf (letter boggle-board position) (elt letters (incf index)))))
   boggle-board)
 
+(defun make-board-from-string (letters)
+  (fill-board (make-instance 'boggle-board) letters))
+
 (defun board-letter-string (boggle-board)
   (coerce
    (iter outer (for r from 0 to (1- +board-num-rows+))
@@ -256,4 +259,19 @@
 	(let ((board (fill-board-randomly (make-instance 'boggle-board))))
 	  (let ((solutions (list-possible-solutions board words)))
 	    (finding (list board (length solutions) solutions) maximizing (length solutions))))))
-; nice board "fhbnsneretolhoek" "ridaselsotogthrn" "wesnnteleruisdoh"
+
+(defun count-words-longer-than (solutions length)
+  (iter (for solution in solutions)
+	(when (>= (length (car solution)) length)
+	  (summing 1))))
+(defun compute-word-length-value (solutions)
+  (iter (for solution in solutions)
+	(summing (expt 10 (length (car solution))))))
+(defun find-board-with-longest-words (words &optional (number-tries 10000))
+  (iter (for i from 1 to number-tries)
+	(let ((board (fill-board-randomly (make-instance 'boggle-board))))
+	  (let ((solutions (list-possible-solutions board words)))
+	    (finding (list board (length solutions) (compute-word-length-value solutions) solutions)
+		     maximizing (compute-word-length-value solutions))))))
+;; nice board "fhbnsneretolhoek" "ridaselsotogthrn" "wesnnteleruisdoh"
+;; "eursnipthtterxsr" "udaomeatnaetlspn" "garcnvusyeinhhre" "linitrunspieingf"
