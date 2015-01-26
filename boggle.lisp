@@ -266,7 +266,7 @@
 	  (summing 1))))
 (defun compute-word-length-value (solutions)
   (iter (for solution in solutions)
-	(summing (expt 10 (length (car solution))))))
+	(summing (expt 4 (length (car solution))))))
 (defun find-board-with-longest-words (words &optional (number-tries 10000))
   (iter (for i from 1 to number-tries)
 	(let ((board (fill-board-randomly (make-instance 'boggle-board))))
@@ -275,3 +275,4 @@
 		     maximizing (compute-word-length-value solutions))))))
 ;; nice board "fhbnsneretolhoek" "ridaselsotogthrn" "wesnnteleruisdoh"
 ;; "eursnipthtterxsr" "udaomeatnaetlspn" "garcnvusyeinhhre" "linitrunspieingf"
+;; "nghahitrtvrgdoer" "treonnkrigoenbah" "nonnitvenstechiq"
