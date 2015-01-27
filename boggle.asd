@@ -8,5 +8,7 @@
   :depends-on (:iterate :alexandria)
   :components ((:file "package")
 	       (:file "boggle-macros")
-               (:file "boggle")))
+               (:file "boggle")
+	       (:file "boggle-test-macros")
+	       (:file "boggle-test"))
 

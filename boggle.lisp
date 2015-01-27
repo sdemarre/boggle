@@ -2,10 +2,6 @@
 
 (in-package #:boggle)
 
-(defconstant +board-num-rows+ 4)
-(defconstant +board-num-columns+ 4)
-
-
 (defun make-position (row column)
   (cons row column))
 (defun position-row (position)
@@ -63,11 +59,6 @@
 	 (iter (for c from 0 to (1- +board-num-columns+))
 	       (in outer (collect (letter boggle-board (make-position r c))))))
    'string))
-
-(defmacro with-position ((row column position) &body body)
-  `(let ((,row (position-row ,position))
-	 (,column (position-column ,position)))
-     ,@body))
 
 (defun valid-board-position (position)
   (with-position (row column position)
@@ -215,44 +206,6 @@
     (compute-solutions boggle-board words nil "" (list (make-position -1 -1))
 		       #'(lambda (new-word new-path) (push (list new-word (rest (reverse new-path))) result)))
     (reverse (remove-duplicates result :test #'string= :key #'car))))
-
-(defun list-equal (l1 l2)
-  (if (and (not (null l1))
-	   (not (null l2)))
-      (or (and (null (car l1))
-	       (null (car l2))
-	       (list-equal (cdr l1) (cdr l2)))
-	  (and (numberp (car l1))
-	       (numberp (car l2))
-	       (= (car l1) (car l2))
-	       (list-equal (cdr l1) (cdr l2))))
-      (and (null l1) (null l2))))
-(defmacro verify (expression)
-  `(let ((result ,expression))
-     (if (not result)
-	 (format t "FAILED: ~a~%" ',expression))))
-(defun run-tests ()
-  (let ((words #("a" "aasssv" "aatta" "aenrr" "aioewn" "aisa" "ameoofn" "brye" "cb" "chahht"
-		 "cn" "csdiph" "da" "dr" "dtrusoo" "eemrnl" "efoso" "efr" "eg" "egile" "eheut"
-		 "ehpenna" "eii" "elesrrr" "enhrf" "ensa" "eo" "eso" "et" "ewott" "h" "hloheea"
-		 "hmehah" "hmetna" "hnen" "hnsip" "hrelnr" "hu" "iel" "ineka" "iteoe" "k"
-		 "kiwlei" "leati" "lnacr" "ltatct" "lwr" "mad" "mepig" "mhovo" "mna" "mrsehtt"
-		 "nic" "nt" "ntch" "nthft" "oaa" "oafh" "oenmas" "osn" "ou" "oucs" "owu" "pia"
-		 "piaha" "prh" "qtcte" "r" "rd" "rei" "resur" "rhoyeoi" "rn" "rntro" "rrr"
-		 "rsseah" "rt" "scnrehe" "sg" "stboefl" "swocaee" "tay" "tgeah" "tiooa"
-		 "trevud" "ttsre" "tuinpp" "wai" "wktrsra" "wleen" "wnaoa" "wnimds" "wol"
-		 "wost" "wtenuev" "yoor" "ytrehee")))
-    (verify (list-equal (possible-word-range words "a") '(0 6)))
-    (verify (list-equal (possible-word-range words "ab") '(nil nil)))
-    (verify (list-equal (possible-word-range words "sg") '(78 78)))
-    (verify (list-equal (possible-word-range words "wo") '(92 93)))
-    (verify (list-equal (possible-word-range words "de") '(nil nil)))
-    (verify (list-equal (possible-word-range words "o") '(56 62)))
-    (verify (list-equal (possible-word-range words "oa") '(56 57)))
-    (verify (list-equal (possible-word-range words "f") '(nil nil)))
-    (verify (list-equal (possible-word-range words "oaa") '(56 56)))
-    (verify (list-equal (possible-word-range words "oaf") '(57 57)))
-    (verify (list-equal (possible-word-range words "z") '(nil nil)))))
 
 (defun find-best-board (words &optional (number-tries 10000))
   (iter (for i from 1 to number-tries)

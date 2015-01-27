@@ -24,3 +24,9 @@
     `(do-on-positions ,position
        (let ((,letter-var (letter ,boggle-board ,position)))
 	 ,@body))))
+
+(defmacro with-position ((row column position) &body body)
+  `(let ((,row (position-row ,position))
+	 (,column (position-column ,position)))
+     ,@body))
+
