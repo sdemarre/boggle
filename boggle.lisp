@@ -39,6 +39,20 @@
     (let ((r (random 10000)))
       (code-char (+ (char-code #\a) (position-if #'(lambda (n) (< r n)) letter-cumul-freqs))))))
 
+(defun random-cube-letter (cube)
+  (elt cube (random 6)))
+(defun random-boggle-string ()
+  (let* ((cubes '("aaeegn" "abbjoo" "achops" "affkps"
+		  "aoottw" "cimotu" "deilrx" "delrvy"
+		  "distty" "eeghnw" "eeinsu" "ehrtvw"
+		  "eiosst" "elrtty" "himnqu" "hlnnrz"))
+	 (random-cubes (mapcar 'random-cube-letter cubes)))
+    (coerce (alexandria:shuffle random-cubes)
+	    'string)))
+(defun random-boggle-board ()
+  (ensure-boggle-board (random-boggle-string)))
+
+
 (defun fill-board-randomly (boggle-board)
   (do-on-positions position
     (setf (letter boggle-board position) (random-english-letter)))
@@ -200,16 +214,20 @@
                   (if collect-solution (funcall collect-solution new-word new-path)
                       (format t "~a, ~a~%" new-word (format-path new-path)))))
 	      (compute-solutions boggle-board words current-words new-word new-path collect-solution))))))
-
-(defun list-possible-solutions (boggle-board words)
-  (let (result)
+(defun ensure-boggle-board (board-or-string)
+  (if (stringp board-or-string)
+      (fill-board (make-instance 'boggle-board) board-or-string)
+      board-or-string))
+(defun list-possible-solutions (boggle-board-or-string words)
+  (let (result
+	(boggle-board (ensure-boggle-board boggle-board-or-string)))
     (compute-solutions boggle-board words nil "" (list (make-position -1 -1))
 		       #'(lambda (new-word new-path) (push (list new-word (rest (reverse new-path))) result)))
     (reverse (remove-duplicates result :test #'string= :key #'car))))
 
 (defun find-best-board (words &optional (number-tries 10000))
   (iter (for i from 1 to number-tries)
-	(let ((board (fill-board-randomly (make-instance 'boggle-board))))
+	(let ((board (random-boggle-board)))
 	  (let ((solutions (list-possible-solutions board words)))
 	    (finding (list board (length solutions) solutions) maximizing (length solutions))))))
 
@@ -226,6 +244,4 @@
 	  (let ((solutions (list-possible-solutions board words)))
 	    (finding (list board (length solutions) (compute-word-length-value solutions) solutions)
 		     maximizing (compute-word-length-value solutions))))))
-;; nice board "fhbnsneretolhoek" "ridaselsotogthrn" "wesnnteleruisdoh"
-;; "eursnipthtterxsr" "udaomeatnaetlspn" "garcnvusyeinhhre" "linitrunspieingf"
-;; "nghahitrtvrgdoer" "treonnkrigoenbah" "nonnitvenstechiq"
+
