@@ -93,23 +93,23 @@
 			(in outer (collect (make-position row column))))))))))
 
 
+(defun read-words (filename)  
+   (coerce (iter (for line in-file filename using #'read-line)
+		 (collect (cl-ppcre:regex-replace "" line "")))
+	   'vector))
 (defun read-english-words ()
   (let (
 #+win32(filename "c:/users/serge.demarre/appdata/roaming/src/lisp/systems/boggle/wordsEn.txt")
        #+unix(filename "/home/serge/src/lisp/my-systems/boggle/wordsEn.txt")
        )
-   (coerce (iter (for line in-file filename using #'read-line)
-		 (collect line))
-	   'vector)))
+    (read-words filename)))
 
 (defun read-dutch-words ()
   (let (
 #+win32(filename "c:/users/serge.demarre/appdata/roaming/src/lisp/systems/boggle/wordsDu.txt")
        #+unix(filename "/home/serge/src/lisp/my-systems/boggle/wordsDu.txt")
        )
-   (coerce (iter (for line in-file filename using #'read-line)
-		 (collect line))
-	   'vector)))
+    (read-words filename)))
 (defun dict-word (words word-index)
   (elt words word-index))
 (defun dict-word-has-enough-letters-p (words word-index letter-index)
