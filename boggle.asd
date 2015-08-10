@@ -5,10 +5,11 @@
   :author "Your Name <your.name@example.com>"
   :license "Specify license here"
   :serial t
-  :depends-on (:iterate :alexandria)
+  :depends-on (:iterate :alexandria :hunchentoot :cl-who)
   :components ((:file "package")
 	       (:file "boggle-macros")
                (:file "boggle")
 	       (:file "boggle-test-macros")
-	       (:file "boggle-test"))
+	       (:file "boggle-test")
+	       (:file "boggle-html")))
 

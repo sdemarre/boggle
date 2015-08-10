@@ -218,7 +218,7 @@
   (if (stringp board-or-string)
       (fill-board (make-instance 'boggle-board) board-or-string)
       board-or-string))
-(defun list-possible-solutions (boggle-board-or-string words)
+(defun solve-boggle-board (boggle-board-or-string words)
   (let (result
 	(boggle-board (ensure-boggle-board boggle-board-or-string)))
     (compute-solutions boggle-board words nil "" (list (make-position -1 -1))
@@ -228,7 +228,7 @@
 (defun find-best-board (words &optional (number-tries 10000))
   (iter (for i from 1 to number-tries)
 	(let ((board (random-boggle-board)))
-	  (let ((solutions (list-possible-solutions board words)))
+	  (let ((solutions (solve-boggle-board board words)))
 	    (finding (list board (length solutions) solutions) maximizing (length solutions))))))
 
 (defun count-words-longer-than (solutions length)
@@ -241,7 +241,7 @@
 (defun find-board-with-longest-words (words &optional (number-tries 10000))
   (iter (for i from 1 to number-tries)
 	(let ((board (fill-board-randomly (make-instance 'boggle-board))))
-	  (let ((solutions (list-possible-solutions board words)))
+	  (let ((solutions (solve-boggle-board board words)))
 	    (finding (list board (length solutions) (compute-word-length-value solutions) solutions)
 		     maximizing (compute-word-length-value solutions))))))
 
