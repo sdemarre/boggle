@@ -1,5 +1,9 @@
 (in-package :boggle)
 
+(shadowing-import 'cl-who:htm)
+(shadowing-import 'cl-who:str)
+
+
 (defun start-html-server ()
   (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4242)))
 
@@ -14,13 +18,14 @@
   (cl-who:with-html-output-to-string (s nil :indent t)
     (:table :border 2 :cellpadding 2 :id "board"
 	    (loop for row from 0 to 3 do
-		 (cl-who:htm (:tr
-			      (loop for column from 0 to 3 do
-				   (cl-who:htm (:td :id (cell-id row column)
-						    (:svg :width 40 :height 40 :fill "red"
-							  (:text :font-size 20 :y 25 :x 15
-								 :style "not-highlighted"
-								 (cl-who:str (format nil "~a" (string-upcase (letter board (make-position row column))))))))))))))))
+		 (htm (:tr
+		       (loop for column from 0 to 3 do
+			    (htm (:td :id (cell-id row column)
+				      :letter (string-upcase (letter board (make-position row column)))
+				      :style "not-highlighted"
+				      (:svg :width 40 :height 40
+					    (:text :font-size 20 :y 25 :x 15
+						   (str (string-upcase (letter board (make-position row column)))))))))))))))
 (defun make-highlight-fun (solution)
   (let ((cells (iter (for (row . col) in (cadr solution))
 		     (collect `(array ,row ,col)))))
@@ -29,10 +34,9 @@
   (cl-who:with-html-output-to-string (s nil :indent t)
     (:table
      (loop for solution in solutions do
-	  (cl-who:htm (:tr
-		       (:td (cl-who:str (car solution)))
-		       (:td :onClick (make-highlight-fun solution)
-			    (cl-who:str (cadr solution)))))))))
+	  (htm (:tr :onClick (make-highlight-fun solution)
+		(:td (str (car solution)))
+		(:td (str (cadr solution)))))))))
 (hunchentoot:define-easy-handler (run-boggle :uri "/run") (letters language)
   (let ((board (make-board-from-string (to-letters letters)))
 	(words (if (and language (stringp language) (string= language "en"))
@@ -40,22 +44,13 @@
 		   (read-dutch-words))))
     (cl-who:with-html-output-to-string (s nil :indent t)
       (:html
-       (:head (:style (cl-who:str "table#board, td#board { text-align: center;font-size: xx-large}
+       (:head (:style (str "table#board, td#board { text-align: center;font-size: xx-large}
 				  .highlighted {background=green}
 				  .not-highlighted {background=white}"))
-	      (:script (cl-who:str
-			(parenscript:ps
-			  (defun cell-id (row column)
-			    (let ((cell-id "c"))
-			      (parenscript:chain cell-id (concat row ":" column))))
-			  (defun highlight-cells (cells)
-			    (loop for row from 0 to 3 do
-				 (loop for col from 0 to 3 do
-				      (setf (parenscript:chain document (get-element-by-id (cell-id row col)) style) :not-highlighted)))
-			    (loop for cell in cells do
-				 (setf (parenscript:chain document (get-element-by-id (cell-id (aref cell 0) (aref  cell 1))) style) :highlighted))))))
+	      (:script (str
+			(parenscript:ps-compile-file "boggle-ps-highlighting.lisp")))
 	      (:body
-	       (cl-who:str (boggle-board-html board))
-	       (cl-who:str (solutions-html (solve-boggle-board board words)))))))))
+	       (str (boggle-board-html board))
+	       (str (solutions-html (solve-boggle-board board words)))))))))
 
 
