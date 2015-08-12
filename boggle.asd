@@ -5,7 +5,7 @@
   :author "Your Name <your.name@example.com>"
   :license "Specify license here"
   :serial t
-  :depends-on (:iterate :alexandria :hunchentoot :cl-who)
+  :depends-on (:iterate :alexandria :hunchentoot :cl-who :css-lite)
   :components ((:file "package")
 	       (:file "boggle-macros")
                (:file "boggle")

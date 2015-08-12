@@ -16,7 +16,7 @@
   (format nil "c~a:~a" row col))
 (defun boggle-board-html (board)
   (cl-who:with-html-output-to-string (s nil :indent t)
-    (:table :border 2 :cellpadding 2 :id "board"
+    (:table :border 2 :cellpadding 2 :id "board" :style "fixed"
 	    (loop for row from 0 to 3 do
 		 (htm (:tr
 		       (loop for column from 0 to 3 do
@@ -34,7 +34,7 @@
   (cl-who:with-html-output-to-string (s nil :indent t)
     (:table
      (loop for solution in solutions do
-	  (htm (:tr :onClick (make-highlight-fun solution)
+	  (htm (:tr :onClick (make-highlight-fun solution) :onMouseover (make-highlight-fun solution)
 		(:td (str (car solution)))
 		(:td (str (cadr solution)))))))))
 (hunchentoot:define-easy-handler (run-boggle :uri "/run") (letters language)
@@ -44,9 +44,9 @@
 		   (read-dutch-words))))
     (cl-who:with-html-output-to-string (s nil :indent t)
       (:html
-       (:head (:style (str "table#board, td#board { text-align: center;font-size: xx-large}
-				  .highlighted {background=green}
-				  .not-highlighted {background=white}"))
+       (:head (:style (str (css-lite:css
+			     (("table#board") (:position "fixed" :top "0" :right "0"))
+			     (("table#board,td#board") (:text-align "center" :font-size "xx-large")))))
 	      (:script (str
 			(parenscript:ps-compile-file "boggle-ps-highlighting.lisp")))
 	      (:body
