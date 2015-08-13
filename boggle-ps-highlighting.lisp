@@ -26,14 +26,17 @@
   (setf (parenscript:chain document (get-element-by-id (cell-id row column)) style background) (color-to-str color))
   (setf (parenscript:chain document (get-element-by-id (cell-id row column)) children 0 style fill) :white))
 
+(defun unhighlight-all-cells ()
+  (loop for row from 0 to 3 do
+       (loop for column from 0 to 3 do
+	    (unhighlight-cell row column))))
 (defun unhighlight-cell (row column)
   (setf (parenscript:chain document (get-element-by-id (cell-id row column)) style background) :white)
   (setf (parenscript:chain document (get-element-by-id (cell-id row column)) children 0 style fill) :black))
 
 (defun highlight-cells (cells)
-  (loop for row from 0 to 3 do
-       (loop for column from 0 to 3 do
-	    (unhighlight-cell row column)))
+  (unhighlight-all-cells)
   (let ((c 0)) 
       (loop for cell in cells do
-	(highlight-cell (aref cell 0) (aref cell 1) (interpolate-color '(0 255 0) '(255 0 0) (parenscript:chain cells length) (incf c))))))
+	   (highlight-cell (aref cell 0) (aref cell 1)
+			   (interpolate-color '(0 255 0) '(255 0 0) (parenscript:chain cells length) (incf c))))))

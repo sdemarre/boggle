@@ -2,7 +2,8 @@
 
 (shadowing-import 'cl-who:htm)
 (shadowing-import 'cl-who:str)
-
+(shadowing-import 'parenscript:ps)
+(shadowing-import 'parenscript:ps*)
 
 (defun start-html-server ()
   (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4242)))
@@ -16,25 +17,26 @@
   (format nil "c~a:~a" row col))
 (defun boggle-board-html (board)
   (cl-who:with-html-output-to-string (s nil :indent t)
-    (:table :border 2 :cellpadding 2 :id "board" :style "fixed"
+    (:table :border 2 :cellpadding 2 :id "board"
 	    (loop for row from 0 to 3 do
 		 (htm (:tr
 		       (loop for column from 0 to 3 do
 			    (htm (:td :id (cell-id row column)
 				      :letter (string-upcase (letter board (make-position row column)))
-				      :style "not-highlighted"
 				      (:svg :width 40 :height 40
 					    (:text :font-size 20 :y 25 :x 15
 						   (str (string-upcase (letter board (make-position row column)))))))))))))))
 (defun make-highlight-fun (solution)
   (let ((cells (iter (for (row . col) in (cadr solution))
 		     (collect `(array ,row ,col)))))
-    (eval `(parenscript:ps (highlight-cells (array ,@cells))))))
+    (ps* `(highlight-cells (array ,@cells)))))
 (defun solutions-html (solutions)
   (cl-who:with-html-output-to-string (s nil :indent t)
-    (:table
+    (:table :id "words"
      (loop for solution in solutions do
-	  (htm (:tr :onClick (make-highlight-fun solution) :onMouseover (make-highlight-fun solution)
+	  (htm (:tr :onClick (make-highlight-fun solution)
+		    :onMouseover (make-highlight-fun solution)
+		    :onMouseLeave (ps (unhighlight-all-cells))
 		(:td (str (car solution)))
 		(:td (str (cadr solution)))))))))
 (hunchentoot:define-easy-handler (run-boggle :uri "/run") (letters language)
@@ -45,10 +47,11 @@
     (cl-who:with-html-output-to-string (s nil :indent t)
       (:html
        (:head (:style (str (css-lite:css
-			     (("table#board") (:position "fixed" :top "0" :right "0"))
-			     (("table#board,td#board") (:text-align "center" :font-size "xx-large")))))
+			     (("table#board") (:position "fixed" :top "0" :left "0"))
+			     (("table#board,td#board") (:text-align "center" :font-size "xx-large"))
+			     (("table#words") (:position "relative" :left 200)))))
 	      (:script (str
-			(parenscript:ps-compile-file "boggle-ps-highlighting.lisp")))
+			(parenscript:ps-compile-file (merge-pathnames "boggle-ps-highlighting.lisp" *boggle-root*))))
 	      (:body
 	       (str (boggle-board-html board))
 	       (str (solutions-html (solve-boggle-board board words)))))))))
