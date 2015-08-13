@@ -97,19 +97,18 @@
    (coerce (iter (for line in-file filename using #'read-line)
 		 (collect (cl-ppcre:regex-replace "" line "")))
 	   'vector))
+(defparameter *boggle-root*
+  #+win32 "c:/users/serge.demarre/appdata/roaming/src/lisp/systems/boggle/"
+  #+unix "/home/serge/src/lisp/my-systems/boggle/"
+)
 (defun read-english-words ()
-  (let (
-#+win32(filename "c:/users/serge.demarre/appdata/roaming/src/lisp/systems/boggle/wordsEn.txt")
-       #+unix(filename "/home/serge/src/lisp/my-systems/boggle/wordsEn.txt")
-       )
+  (let ((filename (merge-pathnames "wordsEn.txt" *boggle-root*)))
     (read-words filename)))
 
 (defun read-dutch-words ()
-  (let (
-#+win32(filename "c:/users/serge.demarre/appdata/roaming/src/lisp/systems/boggle/wordsDu.txt")
-       #+unix(filename "/home/serge/src/lisp/my-systems/boggle/wordsDu.txt")
-       )
+  (let ((filename (merge-pathnames "wordsDu.txt" *boggle-root*)))
     (read-words filename)))
+
 (defun dict-word (words word-index)
   (elt words word-index))
 (defun dict-word-has-enough-letters-p (words word-index letter-index)
