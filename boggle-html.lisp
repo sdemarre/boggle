@@ -1,10 +1,5 @@
 (in-package :boggle)
 
-(shadowing-import 'cl-who:htm)
-(shadowing-import 'cl-who:str)
-(shadowing-import 'parenscript:ps)
-(shadowing-import 'parenscript:ps*)
-
 (defun start-html-server ()
   (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4242)))
 
@@ -19,26 +14,26 @@
   (cl-who:with-html-output-to-string (s nil :indent t)
     (:table :border 2 :cellpadding 2 :id "board"
 	    (loop for row from 0 to 3 do
-		 (htm (:tr
+		 (cl-who:htm (:tr
 		       (loop for column from 0 to 3 do
-			    (htm (:td :id (cell-id row column)
+			    (cl-who:htm (:td :id (cell-id row column)
 				      :letter (string-upcase (letter board (make-position row column)))
 				      (:svg :width 40 :height 40
 					    (:text :font-size 20 :y 25 :x 15
-						   (str (string-upcase (letter board (make-position row column)))))))))))))))
+						   (cl-who:str (string-upcase (letter board (make-position row column)))))))))))))))
 (defun make-highlight-fun (solution)
   (let ((cells (iter (for (row . col) in (cadr solution))
 		     (collect `(array ,row ,col)))))
-    (ps* `(highlight-cells (array ,@cells)))))
+    (parenscript:ps* `(highlight-cells (array ,@cells)))))
 (defun solutions-html (solutions)
   (cl-who:with-html-output-to-string (s nil :indent t)
     (:table :id "words"
      (loop for solution in solutions do
-	  (htm (:tr :onClick (make-highlight-fun solution)
+	  (cl-who:htm (:tr :onClick (make-highlight-fun solution)
 		    :onMouseover (make-highlight-fun solution)
-		    :onMouseLeave (ps (unhighlight-all-cells))
-		(:td (str (car solution)))
-		(:td (str (cadr solution)))))))))
+		    :onMouseLeave (parenscript:ps (unhighlight-all-cells))
+		(:td (cl-who:str (car solution)))
+		(:td (cl-who:str (cadr solution)))))))))
 (hunchentoot:define-easy-handler (run-boggle :uri "/run") (letters language)
   (let ((board (make-board-from-string (to-letters letters)))
 	(words (if (and language (stringp language) (string= language "en"))
@@ -46,14 +41,14 @@
 		   (read-dutch-words))))
     (cl-who:with-html-output-to-string (s nil :indent t)
       (:html
-       (:head (:style (str (css-lite:css
+       (:head (:style (cl-who:str (css-lite:css
 			     (("table#board") (:position "fixed" :top "0" :left "0"))
 			     (("table#board,td#board") (:text-align "center" :font-size "xx-large"))
 			     (("table#words") (:position "relative" :left 200)))))
-	      (:script (str
+	      (:script (cl-who:str
 			(parenscript:ps-compile-file (merge-pathnames "boggle-ps-highlighting.lisp" *boggle-root*))))
 	      (:body
-	       (str (boggle-board-html board))
-	       (str (solutions-html (solve-boggle-board board words)))))))))
+	       (cl-who:str (boggle-board-html board))
+	       (cl-who:str (solutions-html (solve-boggle-board board words)))))))))
 
 
