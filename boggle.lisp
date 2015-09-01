@@ -93,13 +93,15 @@
 			(in outer (collect (make-position row column))))))))))
 
 
-(defun read-words (filename)  
-   (coerce (iter (for line in-file filename using #'read-line)
-		 (collect (cl-ppcre:regex-replace "" line "")))
-	   'vector))
+(defun read-words (filename)
+  (let ((raw-words (iter (for line in-file filename using #'read-line)
+			 (collect (cl-ppcre:regex-replace "" line "")))))
+    (coerce
+     (remove-if #'(lambda (l) (or (< l 3) (< 16 l))) raw-words :key #'length)
+     'vector)))
 (defparameter *boggle-root*
   #+win32 "c:/users/serge.demarre/appdata/roaming/src/lisp/systems/boggle/"
-  #+unix "/home/serge/src/lisp/my-systems/boggle/"
+  #+unix "/home/serge/src/lisp/my-projects/boggle/"
 )
 (defun read-english-words ()
   (let ((filename (merge-pathnames "wordsEn.txt" *boggle-root*)))
@@ -217,10 +219,10 @@
   (if (stringp board-or-string)
       (fill-board (make-instance 'boggle-board) board-or-string)
       board-or-string))
-(defun solve-boggle-board (boggle-board-or-string words)
+(defun solve-boggle-board (boggle-board-or-string words &optional (initial-row -1) (initial-column -1))
   (let (result
 	(boggle-board (ensure-boggle-board boggle-board-or-string)))
-    (compute-solutions boggle-board words nil "" (list (make-position -1 -1))
+    (compute-solutions boggle-board words nil "" (list (make-position initial-row initial-column))
 		       #'(lambda (new-word new-path) (push (list new-word (rest (reverse new-path))) result)))
     (reverse (remove-duplicates result :test #'string= :key #'car))))
 
