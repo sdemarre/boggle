@@ -1,7 +1,9 @@
 (in-package :boggle)
 
 (defun start-html-server ()
-  (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4242)))
+  (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4242))
+  (push (hunchentoot:create-prefix-dispatcher "/en" 'handle-en-board) hunchentoot:*dispatch-table*)
+  (push (hunchentoot:create-prefix-dispatcher "/nl" 'handle-nl-board) hunchentoot:*dispatch-table*))
 
 (defun to-letters (letters)
   (if (and letters (stringp letters) (= (length letters) 16))
@@ -34,21 +36,41 @@
 		    :onMouseLeave (parenscript:ps (unhighlight-all-cells))
 		(:td (cl-who:str (car solution)))
 		(:td (cl-who:str (cadr solution)))))))))
+(defun create-solution-page (board words)
+  (let ((board (ensure-boggle-board board)))
+   (cl-who:with-html-output-to-string (s nil :indent t)
+     (:html
+      (:head (:style (cl-who:str (css-lite:css
+				   (("table#board") (:position "fixed" :top "0" :left "0"))
+				   (("table#board,td#board") (:text-align "center" :font-size "xx-large"))
+				   (("table#words") (:position "relative" :left 200)))))
+	     (:script (cl-who:str
+		       (parenscript:ps-compile-file (merge-pathnames "boggle-ps-highlighting.lisp" *boggle-root*)))))
+      (:body
+       (cl-who:str (boggle-board-html board))
+       (cl-who:str (solutions-html (solve-boggle-board board words))))))))
 (hunchentoot:define-easy-handler (run-boggle :uri "/run") (letters language)
   (let ((board (make-board-from-string (to-letters letters)))
 	(words (if (and language (stringp language) (string= language "en"))
 		   (read-english-words)
 		   (read-dutch-words))))
-    (cl-who:with-html-output-to-string (s nil :indent t)
-      (:html
-       (:head (:style (cl-who:str (css-lite:css
-			     (("table#board") (:position "fixed" :top "0" :left "0"))
-			     (("table#board,td#board") (:text-align "center" :font-size "xx-large"))
-			     (("table#words") (:position "relative" :left 200)))))
-	      (:script (cl-who:str
-			(parenscript:ps-compile-file (merge-pathnames "boggle-ps-highlighting.lisp" *boggle-root*))))
-	      (:body
-	       (cl-who:str (boggle-board-html board))
-	       (cl-who:str (solutions-html (solve-boggle-board board words)))))))))
+    (create-solution-page board words)))
+
+(defun extract-board-from-uri (&optional (default "simpleboardtests"))
+  (let* ((uri (hunchentoot:request-uri hunchentoot:*request*))
+	 (scan-result (multiple-value-list (cl-ppcre:scan "/((en)|(nl))/([a-z]+)" uri))))
+    (if (car scan-result)
+	(destructuring-bind (from to starts ends) scan-result
+	  (declare (ignorable from to))
+	  (subseq uri (elt starts 3) (elt ends 3)))
+	default)))
+(defun handle-en-board ()
+  (create-solution-page
+   (extract-board-from-uri "somedefaultlettr")
+   (read-english-words)))
+(defun handle-nl-board ()
+  (create-solution-page
+   (extract-board-from-uri "eenstandaardbord")
+   (read-dutch-words)))
 
 
